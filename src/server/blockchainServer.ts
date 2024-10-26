@@ -26,6 +26,10 @@ app.get('/blocks', (req, res, next) => {
     res.json(blockchain.blocks);
 });
 
+app.get('/block/next', (req, res, next) => {
+    res.json(blockchain.getNextBlock());
+});
+
 app.get('/block/:indexOrHash', (req, res, next) => {
     const indexOrHash = req.params.indexOrHash;
     let block;
