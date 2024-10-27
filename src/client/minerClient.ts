@@ -1,11 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import axios from "axios";
 import BlockInfo from "../lib/blockInfo";
 import Block from "../lib/block";
 
-const BLOCKCHAIN_SERVER = 'http://localhost:3000';
+const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
 const minerWallet = {
     privateKey: "private-key",
-    publicKey: "public-key"
+    publicKey: `${process.env.MINER_WALLET}`
 }
 
 let totalMined = 0;
@@ -41,6 +44,7 @@ async function mine() {
 }
 
 console.clear();
+log("Logged as " + minerWallet.publicKey);
 mine();
 
 function log(message: string) {
