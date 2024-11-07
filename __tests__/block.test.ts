@@ -1,6 +1,11 @@
-import { describe, test, expect, beforeAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, jest } from '@jest/globals';
 import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
+
+jest.mock('../src/lib/transaction');
+
 
 describe('Block Tests', () =>{
     
@@ -10,16 +15,19 @@ describe('Block Tests', () =>{
 
     beforeAll(() => {
         genesis = new Block({
-            data : "Genesis Block"
-        } as Block);
-        
+            transactions: [new Transaction({
+                data : "Genesis Block"  
+            } as Transaction)]            
+        } as Block);        
     });
 
     test('Should be valid', () => {
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
-            data : "Bloco - Should be valid"
+            transactions: [new Transaction({
+                data : "Block - Should be valid"  
+            } as Transaction)] 
         } as Block);
 
         block.mine(DIFFICULTY, MINER);
@@ -32,7 +40,9 @@ describe('Block Tests', () =>{
     test('Should create by blockinfo', () => {
         const block = Block.fromBlockInfo({
             index: 1,
-            data: "Block - Should create by blockinfo",
+            transactions: [new Transaction({
+                data : "Block - Should create by blockinfo"  
+            } as Transaction)],
             difficulty: 0,
             feePerTx: 1,
             maxDifficulty: 16,
@@ -58,7 +68,9 @@ describe('Block Tests', () =>{
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
-            data : "Bloco - Should NOT be valid(empty hash)"
+            transactions: [new Transaction({
+                data : "Block - Should NOT be valid(empty hash)"  
+            } as Transaction)],
         } as Block);
 
         block.mine(DIFFICULTY, MINER);
@@ -73,7 +85,9 @@ describe('Block Tests', () =>{
         const block = new Block({
             index: 1,
             previousHash: "genesis.hash",
-            data : "Bloco - Should NOT be valid(previous hash)"
+            transactions: [new Transaction({
+                data : "Block - Should NOT be valid(previous hash)" 
+            } as Transaction)],
         } as Block);
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
@@ -85,7 +99,9 @@ describe('Block Tests', () =>{
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
-            data : "Bloco - Should NOT be valid(timestamp)"
+            transactions: [new Transaction({
+                data : "Block - Should NOT be valid(timestamp)"
+            } as Transaction)],
         } as Block);
         block.timestamp = -1;
         block.hash = block.getHash();
@@ -98,7 +114,9 @@ describe('Block Tests', () =>{
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
-            data : "Bloco - Should NOT be valid(hash)"
+            transactions: [new Transaction({
+                data : "Block - Should NOT be valid(hash)"
+            } as Transaction)],
         } as Block);
 
         block.hash = "";
@@ -108,13 +126,64 @@ describe('Block Tests', () =>{
         expect(result.success).toBeFalsy();
     });
 
-    test('Should NOT be valid(data)', () => {
+    test('Should NOT be valid(transactions)', () => {
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
+            transactions: [new Transaction({
+                data : ""
+            } as Transaction)],
         } as Block);
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
         expect(result.success).toBeFalsy();
     });
+
+    test('Should NOT be valid(duplicated fee transaction)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                data : "FEE - 1",
+                type: TransactionType.FEE
+            } as Transaction),
+            new Transaction({
+                data : "FEE - 2",
+                type: TransactionType.FEE
+            } as Transaction)],
+        } as Block);
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(duplicated fee transaction)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                data : "FEE - 1",
+                type: TransactionType.FEE
+            } as Transaction),
+            new Transaction({
+                data : "FEE - 2",
+                type: TransactionType.FEE
+            } as Transaction)],
+        } as Block);
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(invalid transaction)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction()],
+        } as Block);
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
 })
