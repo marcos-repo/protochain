@@ -70,7 +70,6 @@ app.post('/block', (req, res, next) => {
 });
 
 app.get('/transactions/:hash?', (req, res, next) => {
-    
     if(req.params.hash){
         res.json(blockchain.getTransaction(req.params.hash));
     }
@@ -83,7 +82,7 @@ app.get('/transactions/:hash?', (req, res, next) => {
 });
 
 app.post('/transactions', (req, res, next) => {
-    if(req.body.hash == undefined) {
+    if(req.body.data === undefined) {
         res.sendStatus(422); 
         return;
     }

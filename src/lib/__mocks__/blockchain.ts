@@ -3,17 +3,14 @@ import Validation from "../validation";
 import BlockInfo from "../blockInfo";
 import Transaction from "../transaction";
 import TransactionType from "../transactionType";
+import TransactionSearch from "../transactionSearch";
 
 
-/**
- * Blockchain mock class
- */
 export default class Blockchain {
     blocks: Block[];
+    mempool: Transaction[];
     nextIndex: number = 0;
-    /**
-     * Creates a new mock Blockchain
-     */
+
     constructor(){
         this.blocks = [new Block({
             index: 0, 
@@ -26,6 +23,17 @@ export default class Blockchain {
             timestamp: Date.now()
         } as Block)];
         this.nextIndex++;
+
+        this.mempool = [new Transaction({
+            data:"tx1",
+            hash: "abc",
+            type: TransactionType.REGULAR
+        } as Transaction),
+        new Transaction({
+            data :"tx2",
+            hash: "xyz",
+            type: TransactionType.REGULAR
+        } as Transaction)]
     }
 
     getLastBlock() : Block {
@@ -71,5 +79,35 @@ export default class Blockchain {
             feePerTx,
             maxDifficulty
         } as BlockInfo;
+    }
+
+    getTransaction(hash: string) : TransactionSearch {
+
+        this.mempool[0].hash = "mempool";
+        const mempoolIndex = this.mempool.findIndex(tx => tx.hash === hash);
+        if(mempoolIndex !== -1)
+            return {
+                mempoolIndex: mempoolIndex,
+                transaction: this.mempool[mempoolIndex]
+         } as TransactionSearch;
+
+        this.blocks[0].transactions[0].hash = "blocks";
+        const blockIndex = this.blocks.findIndex(b => b.transactions.some(tx => tx.hash === hash));
+        if(blockIndex !== -1)
+            return {
+                blockIndex: blockIndex,
+                transaction: this.blocks[blockIndex].transactions.find(tx => tx.hash)
+         } as TransactionSearch;
+
+         return {mempoolIndex: -1, blockIndex: -1} as TransactionSearch
+    }
+
+    addTransaction(transaction: Transaction) : Validation {
+        
+        if(transaction.data === "") return new Validation(false, "Invalid data");
+        
+        this.mempool.push(transaction);
+        
+        return new Validation(true, transaction.hash);
     }
 }

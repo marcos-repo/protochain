@@ -2,6 +2,7 @@ import request from 'supertest';
 import {describe, expect, jest, test} from '@jest/globals';
 import {app} from '../src/server/blockchainServer'
 import Block from '../src/lib/block';
+import Transaction from '../src/lib/transaction';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
@@ -90,5 +91,72 @@ describe('Blockchain Server tests', () => {
             .send(block);
 
         expect(response.status).toEqual(422);
+    });
+
+    test('GET /transactions/ - Should get transactions info', async () => {
+        const response = await request(app)
+            .get('/transactions');
+
+        expect(response.status).toEqual(200);
+        expect(response.body.size).toBeGreaterThan(0);
+    });
+
+    test('GET /transactions/ - Should get transactions(blocks)', async () => {
+        const response = await request(app)
+            .get('/transactions/blocks');
+
+        expect(response.status).toEqual(200);
+        expect(response.body.blockIndex).toBeGreaterThan(-1);
+    });
+
+    test('GET /transactions/ - Should get transactions(mempool)', async () => {
+        const response = await request(app)
+            .get('/transactions/mempool');
+
+        expect(response.status).toEqual(200);
+        expect(response.body.mempoolIndex).toBeGreaterThan(-1);
+    });
+
+    test('GET /transactions/ - Should NOT get transactions', async () => {
+        const response = await request(app)
+            .get('/transactions/xpto');
+
+        expect(response.status).toEqual(200);
+        expect(response.body.mempoolIndex).toEqual(-1);
+        expect(response.body.blockIndex).toEqual(-1);
+    });
+
+    test('POST /transactions/ - Should create a new transaction', async () => {
+        const transaction = new Transaction({
+            data: "tx"
+        } as Transaction);
+
+        const response = await request(app)
+            .post('/transactions/')
+            .send(transaction);
+
+        expect(response.status).toEqual(201);
+        expect(response.body.data).toEqual(transaction.data);
+    });
+
+    test('POST /transactions/ - Should NOT create a new transaction(undefined)', async () => {
+
+        const response = await request(app)
+            .post('/transactions/')
+            .send(undefined);
+
+        expect(response.status).toEqual(422);
+    });
+
+    test('POST /transactions/ - Should NOT create a new transaction(invalid data)', async () => {
+        var transaction = new Transaction({
+            hash: ""
+        } as Transaction);
+
+        const response = await request(app)
+            .post('/transactions/')
+            .send(transaction);
+
+        expect(response.status).toEqual(400);
     });
 })

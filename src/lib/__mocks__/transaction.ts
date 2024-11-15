@@ -12,7 +12,7 @@ export default class Transaction {
         this.type = tx?.type || TransactionType.REGULAR;
         this.timestamp = tx?.timestamp || Date.now();
         this.data = tx?.data || "";
-        this.hash = this.getHash();
+        this.hash = tx?.hash || this.getHash();
     }
 
     getHash() : string {
