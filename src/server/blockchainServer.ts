@@ -75,8 +75,8 @@ app.get('/transactions/:hash?', (req, res, next) => {
     }
     else {
         res.json({
-            next: blockchain.mempool.slice(0, Blockchain.TX_PER_BLOCK),
-            size: blockchain.mempool.length
+            size: blockchain.mempool.length,
+            next: blockchain.mempool.slice(0, Blockchain.TX_PER_BLOCK)            
         });
     }
 });
