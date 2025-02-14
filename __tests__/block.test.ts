@@ -3,8 +3,10 @@ import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
 
 jest.mock('../src/lib/transaction');
+jest.mock('../src/lib/transactionInput');
 
 
 describe('Block Tests', () =>{
@@ -16,7 +18,7 @@ describe('Block Tests', () =>{
     beforeAll(() => {
         genesis = new Block({
             transactions: [new Transaction({
-                data : "Genesis Block"  
+                txInput : new TransactionInput() 
             } as Transaction)]            
         } as Block);        
     });
@@ -26,7 +28,8 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : "Block - Should be valid"  
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction)] 
         } as Block);
 
@@ -37,11 +40,12 @@ describe('Block Tests', () =>{
         expect(result.success).toBeTruthy();
     });
 
-    test('Should create by blockinfo', () => {
+    test('Should create from blockinfo', () => {
         const block = Block.fromBlockInfo({
             index: 1,
             transactions: [new Transaction({
-                data : "Block - Should create by blockinfo"  
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction)],
             difficulty: 0,
             feePerTx: 1,
@@ -69,7 +73,7 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : "Block - Should NOT be valid(empty hash)"  
+                txInput : new TransactionInput()  
             } as Transaction)],
         } as Block);
 
@@ -86,7 +90,7 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: "genesis.hash",
             transactions: [new Transaction({
-                data : "Block - Should NOT be valid(previous hash)" 
+                txInput : new TransactionInput()  
             } as Transaction)],
         } as Block);
 
@@ -98,15 +102,34 @@ describe('Block Tests', () =>{
     test('Should NOT be valid(timestamp)', () => {
         const block = new Block({
             index: 1,
+            timestamp: -1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : "Block - Should NOT be valid(timestamp)"
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction)],
         } as Block);
+
         block.timestamp = -1;
         block.hash = block.getHash();
-        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(previousHash)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                txInput : new TransactionInput(),
+                to: "wallet"
+            } as Transaction)],
+        } as Block);
+
+        block.previousHash = "";
+
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
         expect(result.success).toBeFalsy();
     });
 
@@ -115,41 +138,29 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : "Block - Should NOT be valid(hash)"
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction)],
         } as Block);
 
-        block.hash = "";
+        block.mine(DIFFICULTY, MINER);
+        block.hash = "hash";
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
-
         expect(result.success).toBeFalsy();
     });
 
-    test('Should NOT be valid(transactions)', () => {
+    test('Should NOT be valid(tx input)', () => {
+        
+        const txInput = new TransactionInput();
+        txInput.amount = -10;
+
         const block = new Block({
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : ""
-            } as Transaction)],
-        } as Block);
-        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
-
-        expect(result.success).toBeFalsy();
-    });
-
-    test('Should NOT be valid(duplicated fee transaction)', () => {
-        const block = new Block({
-            index: 1,
-            previousHash: genesis.hash,
-            transactions: [new Transaction({
-                data : "FEE - 1",
-                type: TransactionType.FEE
-            } as Transaction),
-            new Transaction({
-                data : "FEE - 2",
-                type: TransactionType.FEE
+               txInput: txInput,
+               to: "wallet"
             } as Transaction)],
         } as Block);
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
@@ -162,11 +173,29 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                data : "FEE - 1",
+                txInput : new TransactionInput(),
                 type: TransactionType.FEE
             } as Transaction),
             new Transaction({
-                data : "FEE - 2",
+                txInput : new TransactionInput(),
+                type: TransactionType.FEE
+            } as Transaction)],
+        } as Block);
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(duplicated fee transaction)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                txInput : new TransactionInput() ,
+                type: TransactionType.FEE
+            } as Transaction),
+            new Transaction({
+                txInput : new TransactionInput() ,
                 type: TransactionType.FEE
             } as Transaction)],
         } as Block);

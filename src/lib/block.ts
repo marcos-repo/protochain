@@ -4,9 +4,6 @@ import BlockInfo from './blockInfo';
 import Transaction from './transaction';
 import TransactionType from './transactionType';
 
-/**
- * Block class
- */
 export default class Block {
 
     index: number;
@@ -17,10 +14,6 @@ export default class Block {
     nonce: number;
     miner: string;
 
-    /**
-     * Creates a new block
-     * @param block The block data
-     */
     constructor(block?:  Block){
         this.index = block?.index || 0;
         this.timestamp = block?.timestamp || Date.now();
@@ -41,11 +34,6 @@ export default class Block {
         return sha256(this.index + txs + this.timestamp + this.previousHash + this.nonce + this.miner).toString();
     }
 
-    /**
-     * Generates a new valid hash for this block with the specified difficulty
-     * @param difficulty The blockchain current difficulty 
-     * @param miner The miner wallet address
-     */
     mine(difficulty: number, miner: string) {
         this.miner = miner;
         const prefix = new Array(difficulty + 1).join("0");
@@ -57,13 +45,6 @@ export default class Block {
         } while(!this.hash.startsWith(prefix));
     }
 
-    /**
-     * Validates the block
-     * @param previousHash The previous block hash
-     * @param previousIndex The previuos block index
-     * @param difficulty Tha blockchain current difficulty
-     * @returns Returns true if the block is valid
-     */
     isValid(previousHash: string, previousIndex: number, difficulty: number) : Validation {
 
         if(this.transactions && this.transactions.length) {
@@ -93,7 +74,7 @@ export default class Block {
         const block = new Block();
         block.index = blockInfo.index;
         block.previousHash = blockInfo.previousHash;
-        block.transactions = blockInfo.transactions;
+        block.transactions = blockInfo.transactions.map(tx => new Transaction(tx));
 
         return block;
     }

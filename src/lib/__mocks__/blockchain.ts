@@ -4,6 +4,7 @@ import BlockInfo from "../blockInfo";
 import Transaction from "../transaction";
 import TransactionType from "../transactionType";
 import TransactionSearch from "../transactionSearch";
+import TransactionInput from "./transactionInput";
 
 
 export default class Blockchain {
@@ -17,7 +18,7 @@ export default class Blockchain {
             hash: 'abc',
             transactions: 
             [new Transaction({
-                data :"Genesis Block",
+                to :"Genesis Block",
                 type: TransactionType.FEE
             } as Transaction)],
             timestamp: Date.now()
@@ -25,12 +26,12 @@ export default class Blockchain {
         this.nextIndex++;
 
         this.mempool = [new Transaction({
-            data:"tx1",
+            to:"tx1",
             hash: "abc",
             type: TransactionType.REGULAR
         } as Transaction),
         new Transaction({
-            data :"tx2",
+            to :"tx2",
             hash: "xyz",
             type: TransactionType.REGULAR
         } as Transaction)]
@@ -63,7 +64,7 @@ export default class Blockchain {
 
     getNextBlock() : BlockInfo {
         const transactions = [new Transaction({
-            data : new Date().toString()
+            txInput: new TransactionInput()
         } as Transaction)];
         const difficulty = 0;
         const previousHash = this.getLastBlock().hash;
@@ -104,7 +105,7 @@ export default class Blockchain {
 
     addTransaction(transaction: Transaction) : Validation {
         
-        if(transaction.data === "") return new Validation(false, "Invalid data");
+        if(transaction.to === "") return new Validation(false, "Invalid data");
         
         this.mempool.push(transaction);
         

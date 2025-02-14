@@ -21,7 +21,7 @@ export default class Blockchain {
                 index:this.nextIndex, 
                 transactions: [new Transaction({
                     type: TransactionType.FEE,
-                    data: new Date().toString()
+                    to: new Date().toString()
                 } as Transaction)]
             } as Block)];
         this.nextIndex++;

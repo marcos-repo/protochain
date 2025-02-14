@@ -3,9 +3,11 @@ import {describe, expect, jest, test} from '@jest/globals';
 import {app} from '../src/server/blockchainServer'
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
+import TransactionInput from '../src/lib/transactionInput';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
+jest.mock('../src/lib/transactionInput');
 
 describe('Blockchain Server tests', () => {
 
@@ -128,7 +130,8 @@ describe('Blockchain Server tests', () => {
 
     test('POST /transactions/ - Should create a new transaction', async () => {
         const transaction = new Transaction({
-            data: "tx"
+            txInput: new TransactionInput(),
+            to: "wallet"
         } as Transaction);
 
         const response = await request(app)
@@ -136,10 +139,13 @@ describe('Blockchain Server tests', () => {
             .send(transaction);
 
         expect(response.status).toEqual(201);
-        expect(response.body.data).toEqual(transaction.data);
+        expect(response.body.txInput).toEqual(transaction.txInput);
     });
 
     test('POST /transactions/ - Should NOT create a new transaction(undefined)', async () => {
+
+        const transaction = new Transaction();
+        transaction.txInput == undefined;
 
         const response = await request(app)
             .post('/transactions/')

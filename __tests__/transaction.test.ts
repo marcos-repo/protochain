@@ -1,12 +1,16 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
+
+jest.mock('../src/lib/transactionInput');
 
 describe('Transaction Tests', () =>{
     
     test('Should be valid (REGULAR)', () => {
         const tx = new Transaction({
-                data : "Transaction - Should be valid (REGULAR)"  
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction);
 
         const result = tx.isValid();
@@ -25,20 +29,20 @@ describe('Transaction Tests', () =>{
     test('Should be valid (REGULAR complete)', () => {
         const tx = new Transaction({
                 type: TransactionType.REGULAR,
-                data : "Transaction - Should be valid (REGULAR complete)",
-                timestamp: Date.now(),
-                hash: "abc"
+                txInput : new TransactionInput(),
+                to: "wallet",
+                timestamp: Date.now()
             } as Transaction);
 
         const result = tx.isValid();
-
         expect(result.success).toBeTruthy();
     });
 
 
     test('Should be valid (FEE)', () => {
         const tx = new Transaction({
-                data : "Transaction - Should be valid (REGULAR)"  
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction);
 
         const result = tx.isValid();
@@ -48,7 +52,7 @@ describe('Transaction Tests', () =>{
 
     test('Should NOT be valid (invalid hash)', () => {
         const tx = new Transaction({
-                data : "Transaction - Should NOT be valid (invalid hash)"  
+                txInput : new TransactionInput()
             } as Transaction);
         
         tx.hash = "abc";
@@ -57,14 +61,19 @@ describe('Transaction Tests', () =>{
         expect(result.success).toBeFalsy();
     });
 
-    test('Should NOT be valid (invalid data)', () => {
+    test('Should NOT be valid (invalid tx input)', () => {
+        
+        const txInput = new TransactionInput()
+        txInput.amount = -10;
+
         const tx = new Transaction({
-                data : ""  
+                txInput : new TransactionInput(),
+                to: "wallet"
             } as Transaction);
         
-        tx.hash = "abc";
+        tx.txInput.amount = -10;
+        
         const result = tx.isValid();
-
         expect(result.success).toBeFalsy();
     });
 })

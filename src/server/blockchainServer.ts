@@ -83,7 +83,7 @@ app.get('/transactions/:hash?', (req, res, next) => {
 });
 
 app.post('/transactions', (req, res, next) => {
-    if(req.body.data === undefined) {
+    if(req.body.txInput === undefined) {
         res.sendStatus(422); 
         return;
     }

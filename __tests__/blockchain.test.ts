@@ -2,9 +2,11 @@ import { describe, test, expect, jest } from '@jest/globals';
 import Blockchain from '../src/lib/blockchain';
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
+import TransactionInput from '../src/lib/transactionInput';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/transaction');
+jest.mock('../src/lib/transactionInput');
 
 describe('Blockchain Tests', () =>{
     
@@ -20,9 +22,11 @@ describe('Blockchain Tests', () =>{
 
     test('Should NOT be valid', () => {
         const blockchain = new Blockchain();
-
+        const txInput = new TransactionInput();
+        txInput.amount = -10; 
+        
         const tx = new Transaction({
-            data : "Block - 2"
+            txInput : new TransactionInput()
         } as Transaction);
 
         blockchain.mempool.push(tx);
@@ -44,7 +48,7 @@ describe('Blockchain Tests', () =>{
             index: 1,
             previousHash: blockchain.blocks[0].hash,
             transactions: [new Transaction({
-                data : "Block - 2"
+                txInput : new TransactionInput()
             } as Transaction)],
         } as Block))
         expect(blockchain.isValid().success).toEqual(true);
@@ -56,7 +60,7 @@ describe('Blockchain Tests', () =>{
             index: 1,
             previousHash: blockchain.getLastBlock().hash,
             transactions: [new Transaction({
-                data : "Block - 2"
+                txInput : new TransactionInput()
             } as Transaction)],
         } as Block));
 
@@ -75,7 +79,7 @@ describe('Blockchain Tests', () =>{
             index: -1,
             previousHash: blockchain.getLastBlock().hash,
             transactions: [new Transaction({
-                data : "Block - 2"
+                txInput : new TransactionInput()
             } as Transaction)],
         } as Block));
 
@@ -99,13 +103,13 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
-            hash: "xyz"
+            txInput : new TransactionInput(),
+            to: "wallet",
+            hash: "hash"
         } as Transaction);
 
-        const validation = blockchain.addTransaction(tx);
-
-        expect(validation.success).toBeTruthy()
+        const result = blockchain.addTransaction(tx);
+        expect(result.success).toBeTruthy()
     });
 
     test('Should NOT add transaction', () => {
@@ -124,8 +128,9 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
-            hash: "xyz"
+            txInput : new TransactionInput(),
+            hash: "xyz",
+            to: "wallet"
         } as Transaction);
 
         blockchain.blocks.push(new Block({
@@ -141,22 +146,22 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
-            hash: "xyz"
+            txInput : new TransactionInput(),
+            hash: "xyz",
+            to: "wallet"
         } as Transaction);
 
         blockchain.mempool.push(tx);
 
-        const validation = blockchain.addTransaction(tx);
-
-        expect(validation.success).toBeFalsy()
+        const result = blockchain.addTransaction(tx);
+        expect(result.success).toBeFalsy()
     });
 
     test('Should get transaction(mempool)', () => {
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
+            txInput : new TransactionInput(),
             hash: "xyz"
         } as Transaction);
 
@@ -170,7 +175,7 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
+            txInput : new TransactionInput(),
             hash: "xyz"
         } as Transaction);
 
@@ -186,7 +191,7 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain();
 
         const tx = new Transaction({
-            data: "tx1",
+            txInput : new TransactionInput(),
             hash: "xyz"
         } as Transaction);
 
