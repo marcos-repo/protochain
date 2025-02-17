@@ -12,7 +12,7 @@ jest.mock('../src/lib/transactionInput');
 describe('Block Tests', () =>{
     
     let genesis: Block;
-    const DIFFICULTY = 0;
+    const DIFFICULTY = 1;
     const MINER = "miner";
 
     beforeAll(() => {
@@ -32,6 +32,13 @@ describe('Block Tests', () =>{
                 to: "wallet"
             } as Transaction)] 
         } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+
+        block.hash = block.getHash();
 
         block.mine(DIFFICULTY, MINER);
 
@@ -53,6 +60,13 @@ describe('Block Tests', () =>{
             previousHash: genesis.hash
         } as BlockInfo);
 
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+
+        block.hash = block.getHash();
+
         block.mine(DIFFICULTY, MINER);
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
@@ -62,6 +76,13 @@ describe('Block Tests', () =>{
 
     test('Should NOT be valid(fallbacks)', () => {
         const block = new Block();
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.hash = block.getHash();
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
@@ -76,6 +97,12 @@ describe('Block Tests', () =>{
                 txInput : new TransactionInput()  
             } as Transaction)],
         } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
 
         block.mine(DIFFICULTY, MINER);
 
@@ -94,6 +121,13 @@ describe('Block Tests', () =>{
             } as Transaction)],
         } as Block);
 
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.hash = block.getHash();
+
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
         expect(result.success).toBeFalsy();
@@ -109,11 +143,20 @@ describe('Block Tests', () =>{
                 to: "wallet"
             } as Transaction)],
         } as Block);
-
+        
         block.timestamp = -1;
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
         block.hash = block.getHash();
 
+        block.mine(DIFFICULTY, MINER);
+
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
         expect(result.success).toBeFalsy();
     });
 
@@ -129,7 +172,61 @@ describe('Block Tests', () =>{
 
         block.previousHash = "";
 
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.mine(DIFFICULTY, MINER);
+
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(index)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                txInput : new TransactionInput(),
+                to: "wallet"
+            } as Transaction)],
+        } as Block);
+
+        block.index = -1;
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.mine(DIFFICULTY, MINER);
+
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(no mined)', () => {
+        const block = new Block({
+            index: 1,
+            nonce: 0,
+            miner: MINER,
+            previousHash: genesis.hash,
+            transactions: [new Transaction({
+                txInput : new TransactionInput(),
+                to: "wallet"
+            } as Transaction)],
+        } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+
         expect(result.success).toBeFalsy();
     });
 
@@ -142,6 +239,11 @@ describe('Block Tests', () =>{
                 to: "wallet"
             } as Transaction)],
         } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
 
         block.mine(DIFFICULTY, MINER);
         block.hash = "hash";
@@ -163,6 +265,12 @@ describe('Block Tests', () =>{
                to: "wallet"
             } as Transaction)],
         } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
         expect(result.success).toBeFalsy();
@@ -178,24 +286,6 @@ describe('Block Tests', () =>{
             } as Transaction),
             new Transaction({
                 txInput : new TransactionInput(),
-                type: TransactionType.FEE
-            } as Transaction)],
-        } as Block);
-        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
-
-        expect(result.success).toBeFalsy();
-    });
-
-    test('Should NOT be valid(duplicated fee transaction)', () => {
-        const block = new Block({
-            index: 1,
-            previousHash: genesis.hash,
-            transactions: [new Transaction({
-                txInput : new TransactionInput() ,
-                type: TransactionType.FEE
-            } as Transaction),
-            new Transaction({
-                txInput : new TransactionInput() ,
                 type: TransactionType.FEE
             } as Transaction)],
         } as Block);
@@ -210,6 +300,49 @@ describe('Block Tests', () =>{
             previousHash: genesis.hash,
             transactions: [new Transaction()],
         } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.hash = block.getHash();
+
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+        
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(no fee transaction)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction()],
+        } as Block);
+
+        block.hash = block.getHash();
+
+        const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
+        
+
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid(different from miner)', () => {
+        const block = new Block({
+            index: 1,
+            previousHash: genesis.hash,
+            transactions: [new Transaction()],
+        } as Block);
+
+        block.transactions.push(new Transaction({
+            type: TransactionType.FEE,
+            to: MINER
+        } as Transaction));
+        
+        block.hash = block.getHash();
+
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
 
         expect(result.success).toBeFalsy();

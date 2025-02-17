@@ -71,7 +71,7 @@ describe('Transaction Tests', () =>{
                 to: "wallet"
             } as Transaction);
         
-        tx.txInput.amount = -10;
+        tx.txInput!.amount = -10;
         
         const result = tx.isValid();
         expect(result.success).toBeFalsy();

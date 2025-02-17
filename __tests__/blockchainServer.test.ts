@@ -156,7 +156,8 @@ describe('Blockchain Server tests', () => {
 
     test('POST /transactions/ - Should NOT create a new transaction(invalid data)', async () => {
         var transaction = new Transaction({
-            hash: ""
+            hash: "",
+            txInput: new TransactionInput()
         } as Transaction);
 
         const response = await request(app)
