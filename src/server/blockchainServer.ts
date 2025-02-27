@@ -1,23 +1,27 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express from 'express'
+import express, { NextFunction } from 'express'
 import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
 import Transaction from '../lib/transaction';
+import Wallet from '../lib/wallet';
+import TransactionOutput from '../lib/transactionOutput';
 
 /* c8 ignore next */
-const PORT = process.env.BLOCKCHAIN_PORT || "3000";
+const PORT = process.env.BLOCKCHAIN_PORT || '3000';
 
 const app = express();
 
 /* c8 ignore next */
-if(process.argv.includes("--run")) app.use(morgan('tiny'));    
+if(process.argv.includes('--run')) app.use(morgan('tiny'));    
 
 app.use(express.json());
 
-const blockchain = new Blockchain();
+const wallet = new Wallet(process.env.BLOCKCHAIN_WALLET);
+
+const blockchain = new Blockchain(wallet.publicKey);
 
 app.get('/status', (req, res, next) => {
     res.json({
@@ -83,7 +87,7 @@ app.get('/transactions/:hash?', (req, res, next) => {
 });
 
 app.post('/transactions', (req, res, next) => {
-    if(req.body.txInput === undefined) {
+    if(req.body.txInputs === undefined) {
         res.sendStatus(422); 
         return;
     }
@@ -99,9 +103,23 @@ app.post('/transactions', (req, res, next) => {
     }
 });
 
+app.get('/wallets/:wallet', (req, res, next) => {
+    const wallet = req.params.wallet;
+
+    res.json({
+        balance: 10,
+        fee: blockchain.getFeePerTx(),
+        utxo: [new TransactionOutput({
+            amount: 10,
+            toAddress: wallet,
+            tx: 'tx'
+        } as TransactionOutput)]
+    });
+})
+
 /* c8 ignore start */
-if(process.argv.includes("--run")) 
-    app.listen(PORT, () => { console.log(`Blockchain server is listening at port ${PORT}`);}); 
+if(process.argv.includes('--run')) 
+    app.listen(PORT, () => { console.log(`Blockchain server is listening at port ${PORT}. \nWallet:${wallet.publicKey}`);}); 
 /* c8 ignore stop */
 
 export {

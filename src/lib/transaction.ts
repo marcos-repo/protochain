@@ -1,40 +1,73 @@
-import sha256  from "crypto-js/sha256";
-import TransactionType from "./transactionType";
-import Validation from "./validation";
-import TransactionInput from "./transactionInput";
+import sha256  from 'crypto-js/sha256';
+import TransactionType from './transactionType';
+import Validation from './validation';
+import TransactionInput from './transactionInput';
+import TransactionOutput from './transactionOutput';
 
 
 export default class Transaction {
     type: TransactionType;
     timestamp: number;
     hash: string;
-    txInput: TransactionInput | undefined;
-    to: string;
+    txInputs: TransactionInput[] | undefined;
+    txOutputs: TransactionOutput[];
 
     constructor(tx?: Transaction) {
         this.type = tx?.type || TransactionType.REGULAR;
         this.timestamp = tx?.timestamp || Date.now();
-        this.to = tx?.to || "";
-        this.txInput = tx?.txInput ? 
-            new TransactionInput(tx!.txInput) : 
-            undefined;
+
+        this.txInputs = tx?.txInputs 
+            ? tx.txInputs.map(txi => new TransactionInput(txi))
+            : undefined;
+
+        this.txOutputs = tx?.txOutputs 
+            ? tx.txOutputs.map(txo => new TransactionOutput(txo))
+            : [];
 
         this.hash = tx?.hash || this.getHash();
+
+        this.txOutputs.forEach((txo, index, arr) => arr[index].tx = this.hash);
     }
 
     getHash() : string {
-        const from = this.txInput ?  this.txInput.getHash() : '';
-        return sha256(this.type + from + this.to + this.timestamp).toString();
+        const from = this.txInputs && this.txInputs.length
+            ?  this.txInputs.map(txi => txi.signature).join(',')
+            : '';
+
+        const to = this.txOutputs && this.txOutputs.length
+            ?  this.txOutputs.map(txo => txo.getHash()).join(',')
+            : '';
+
+
+        return sha256(this.type + from + to + this.timestamp).toString();
     }
 
     isValid(): Validation {
-        if(this.hash !== this.getHash()) return new Validation(false, "Invalid Hash");
-        if(!this.to) return new Validation(false, "Invalid to");
+        if(this.hash !== this.getHash()) return new Validation(false, 'Invalid Hash');
 
-        if(this.txInput) {
-            const validation = this.txInput.isValid();
-            if(!validation.success)
-                return new Validation(false, `Invalid tx: ${validation.message} `);
+        if(!this.txOutputs || !this.txOutputs.length || !this.txOutputs.map(txo => txo.isValid()).some(s => s.success)) 
+            return new Validation(false, 'Invalid TXO');
+
+        if(this.txInputs && this.txInputs.length ) {
+            const validations = this.txInputs.map(txi => txi.isValid()).filter(f => !f.success);
+            if(validations && validations.length) {
+                const message = validations.map(m => m.message).join(' ');
+                return new Validation(false, `Invalid transaction inputs ${message} `);
+            }
+
+            const inputSum = this.txInputs.map(txi => txi.amount)
+                                          .reduce((a,b) => a + b, 0);
+
+            const outputSum = this.txOutputs.map(txo => txo.amount)
+                                 .reduce((a,b) => a + b, 0);
+
+            if(inputSum < outputSum)
+                return new Validation(false,'Invalid transaction: input amounts mest be equals or greater than outputs amounts');
+        
+            if(this.txOutputs.some(txo => txo.tx !== this.hash))
+                return new Validation(false, 'Invalid TXO reference hash');
+
+            //TODO: validar as taxas e recompensas quanto type === FEE
         }
 
         return new Validation();

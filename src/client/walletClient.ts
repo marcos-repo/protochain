@@ -2,16 +2,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
 import readline from 'readline';
-import Wallet from "../lib/wallet";
+import Wallet from '../lib/wallet';
 import { read } from 'fs';
 import Transaction from '../lib/transaction';
 import TransactionType from '../lib/transactionType';
 import TransactionInput from '../lib/transactionInput';
+import TransactionOutput from '../lib/transactionOutput';
 
 const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
 
-let myPrivateWallet = "";
-let myPublicWallet = "";
+let myPrivateWallet = '';
+let myPublicWallet = '';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -27,7 +28,7 @@ function menu(){
         if(myPublicWallet)
             console.log(`You are logged as ${myPublicWallet}`);
         else
-        console.log("You aren't logged");
+        console.log(`You aren't logged`);
 
         console.log('');
         console.log('|----------------------------|');
@@ -42,12 +43,12 @@ function menu(){
 
         rl.question('Choose one option: ', (answer) => {
             switch (answer) {
-                case "1": createWallet(); break;
-                case "2": recoverWallet(); break;
-                case "3": getBalance(); break;
-                case "4": sendTransaction(); break;
-                case "5": searchTransaction(); break;
-                case "6": logOut(); break;
+                case '1': createWallet(); break;
+                case '2': recoverWallet(); break;
+                case '3': getBalance(); break;
+                case '4': sendTransaction(); break;
+                case '5': searchTransaction(); break;
+                case '6': logOut(); break;
                 default:{
                     console.log('Wrong option.');
                     menu();
@@ -104,7 +105,7 @@ function getBalance() {
     console.log();
 
     if(!myPublicWallet){
-        console.log("You don't have a wallet yet.");
+        console.log(`You don't have a wallet yet.`);
         return preMenu();
     }
         
@@ -117,7 +118,7 @@ function sendTransaction() {
     console.log();
 
     if(!myPublicWallet){
-        console.log("You don't have a wallet yet.");
+        console.log(`You don't have a wallet yet.`);
         return preMenu();
     }
     
@@ -137,18 +138,34 @@ function sendTransaction() {
                 return preMenu();
             }
 
+            const walletResponse = await axios.get(`${BLOCKCHAIN_SERVER}/wallets/${myPublicWallet}`);
+            const balance = walletResponse.data.balance as number;
+            const fee = walletResponse.data.fee as number;
+            const utxo = walletResponse.data.utxo as TransactionOutput[];
+
+            if(balance < (amount + fee)){
+                console.log('Insufficient funds(tx + fee).');
+                return preMenu();
+            }
+
             const tx = new Transaction();
-            tx.to = to;
+            tx.txOutputs = [
+                new TransactionOutput({
+                    toAddress: to,
+                    amount
+                } as TransactionOutput)
+            ];
             tx.type = TransactionType.REGULAR;
             tx.timestamp = Date.now();
-            tx.txInput = new TransactionInput({
+            tx.txInputs = [new TransactionInput({
                 amount,
                 fromAddress: myPublicWallet,
+                previousTx: utxo[0].tx
+            } as TransactionInput)];
 
-            } as TransactionInput);
-
-            tx.txInput.sign(myPrivateWallet);
+            tx.txInputs[0].sign(myPrivateWallet);
             tx.hash = tx.getHash();
+            tx.txOutputs[0].tx = tx.hash;
 
             try {
                 const response = await axios.post(`${BLOCKCHAIN_SERVER}/transactions/`, tx);
