@@ -91,7 +91,7 @@ app.post('/transactions', (req, res, next) => {
         res.sendStatus(422); 
         return;
     }
-
+    
     const transaction = new Transaction(req.body as Transaction);
     const validation = blockchain.addTransaction(transaction);
 

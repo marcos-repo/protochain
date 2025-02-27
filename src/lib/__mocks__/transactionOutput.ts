@@ -13,7 +13,7 @@ export default class TransactionOutput {
 
     isValid(): Validation {
         if(this.amount < 1)
-            return new Validation(false, 'Negative amout');
+            return new Validation(false, 'Negative amount');
 
         return new Validation();
     }

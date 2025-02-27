@@ -1,7 +1,7 @@
 import TransactionInput from './transactionInput';
 import TransactionType from '../transactionType';
 import Validation from '../validation';
-import TransactionOutput from './transactionOutputs';
+import TransactionOutput from './transactionOutput';
 
 
 

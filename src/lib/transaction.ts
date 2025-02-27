@@ -38,12 +38,13 @@ export default class Transaction {
             ?  this.txOutputs.map(txo => txo.getHash()).join(',')
             : '';
 
-
         return sha256(this.type + from + to + this.timestamp).toString();
     }
 
     isValid(): Validation {
-        if(this.hash !== this.getHash()) return new Validation(false, 'Invalid Hash');
+
+        if(this.hash !== this.getHash()) 
+            return new Validation(false, 'Invalid Hash');
 
         if(!this.txOutputs || !this.txOutputs.length || !this.txOutputs.map(txo => txo.isValid()).some(s => s.success)) 
             return new Validation(false, 'Invalid TXO');

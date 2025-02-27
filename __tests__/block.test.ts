@@ -4,9 +4,11 @@ import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 
 jest.mock('../src/lib/transaction');
 jest.mock('../src/lib/transactionInput');
+jest.mock('../src/lib/transactionOutput');
 
 
 describe('Block Tests', () =>{
@@ -18,7 +20,7 @@ describe('Block Tests', () =>{
     beforeAll(() => {
         genesis = new Block({
             transactions: [new Transaction({
-                txInput : new TransactionInput() 
+                txInputs : [new TransactionInput()],
             } as Transaction)]            
         } as Block);        
     });
@@ -28,14 +30,16 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)] 
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
 
         block.hash = block.getHash();
@@ -51,8 +55,8 @@ describe('Block Tests', () =>{
         const block = Block.fromBlockInfo({
             index: 1,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
             difficulty: 0,
             feePerTx: 1,
@@ -62,7 +66,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
 
         block.hash = block.getHash();
@@ -79,7 +85,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.hash = block.getHash();
@@ -94,13 +102,15 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput()  
+                txInputs : [new TransactionInput()],
             } as Transaction)],
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
 
@@ -117,13 +127,15 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: "genesis.hash",
             transactions: [new Transaction({
-                txInput : new TransactionInput()  
+                txInputs : [new TransactionInput()],
             } as Transaction)],
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.hash = block.getHash();
@@ -139,8 +151,8 @@ describe('Block Tests', () =>{
             timestamp: -1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
         
@@ -148,7 +160,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.hash = block.getHash();
@@ -165,8 +179,8 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
 
@@ -174,7 +188,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.mine(DIFFICULTY, MINER);
@@ -189,8 +205,8 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
 
@@ -198,7 +214,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.mine(DIFFICULTY, MINER);
@@ -215,14 +233,16 @@ describe('Block Tests', () =>{
             miner: MINER,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
@@ -235,14 +255,16 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
 
         block.mine(DIFFICULTY, MINER);
@@ -261,14 +283,16 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-               txInput: txInput,
-               to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction)],
         } as Block);
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
@@ -281,11 +305,11 @@ describe('Block Tests', () =>{
             index: 1,
             previousHash: genesis.hash,
             transactions: [new Transaction({
-                txInput : new TransactionInput(),
+                txInputs : [new TransactionInput()],
                 type: TransactionType.FEE
             } as Transaction),
             new Transaction({
-                txInput : new TransactionInput(),
+                txInputs : [new TransactionInput()],
                 type: TransactionType.FEE
             } as Transaction)],
         } as Block);
@@ -303,7 +327,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.hash = block.getHash();
@@ -338,7 +364,9 @@ describe('Block Tests', () =>{
 
         block.transactions.push(new Transaction({
             type: TransactionType.FEE,
-            to: MINER
+            txOutputs: [new TransactionOutput({
+                toAddress: MINER
+            } as TransactionOutput)],
         } as Transaction));
         
         block.hash = block.getHash();

@@ -1,16 +1,19 @@
-import { describe, test, expect, beforeAll } from '@jest/globals';
+import { describe, test, expect } from '@jest/globals';
 import Transaction from '../src/lib/transaction';
-import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
+import TransactionType from '../src/lib/transactionType';
 
 jest.mock('../src/lib/transactionInput');
+jest.mock('../src/lib/transactionOutput');
 
-describe('Transaction Tests', () =>{
+describe('Transaction Tests', () => {
     
     test('Should be valid (REGULAR)', () => {
+        
         const tx = new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()]
             } as Transaction);
 
         const result = tx.isValid();
@@ -29,8 +32,8 @@ describe('Transaction Tests', () =>{
     test('Should be valid (REGULAR complete)', () => {
         const tx = new Transaction({
                 type: TransactionType.REGULAR,
-                txInput : new TransactionInput(),
-                to: "wallet",
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
                 timestamp: Date.now()
             } as Transaction);
 
@@ -41,8 +44,8 @@ describe('Transaction Tests', () =>{
 
     test('Should be valid (FEE)', () => {
         const tx = new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction);
 
         const result = tx.isValid();
@@ -52,7 +55,7 @@ describe('Transaction Tests', () =>{
 
     test('Should NOT be valid (invalid hash)', () => {
         const tx = new Transaction({
-                txInput : new TransactionInput()
+                txInputs : [new TransactionInput()],
             } as Transaction);
         
         tx.hash = "abc";
@@ -67,12 +70,51 @@ describe('Transaction Tests', () =>{
         txInput.amount = -10;
 
         const tx = new Transaction({
-                txInput : new TransactionInput(),
-                to: "wallet"
+                txInputs : [new TransactionInput()],
+                txOutputs: [new TransactionOutput()],
             } as Transaction);
         
-        tx.txInput!.amount = -10;
+        tx.txInputs![0].amount = -10;
         
+        const result = tx.isValid();
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid (inputs amounts less than outputs)', () => {
+        
+        const txInput = new TransactionInput()
+        txInput.amount = -10;
+
+        const tx = new Transaction({
+                txInputs : [new TransactionInput({
+                    amount: 5
+                } as TransactionInput)],
+                txOutputs: [new TransactionOutput({
+                    amount: 10
+                } as TransactionOutput)],
+            } as Transaction);
+        
+        const result = tx.isValid();
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should NOT be valid (Invalid TXO reference hash)', () => {
+        
+        const txInput = new TransactionInput()
+        txInput.amount = -10;
+
+        const tx = new Transaction({
+                txInputs : [new TransactionInput({
+                    amount: 10
+                } as TransactionInput)],
+                txOutputs: [new TransactionOutput({
+                    amount: 10,
+                } as TransactionOutput)],
+            } as Transaction);
+        
+        tx.hash = tx.getHash();
+        tx.txOutputs[0].tx = 'hash';
+
         const result = tx.isValid();
         expect(result.success).toBeFalsy();
     });

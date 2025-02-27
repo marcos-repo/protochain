@@ -4,10 +4,12 @@ import {app} from '../src/server/blockchainServer'
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
 jest.mock('../src/lib/transactionInput');
+jest.mock('../src/lib/transactionOutput');
 
 describe('Blockchain Server tests', () => {
 
@@ -38,10 +40,10 @@ describe('Blockchain Server tests', () => {
 
     test('GET /block/:hash - Should get block', async () => {
         const response = await request(app)
-            .get('/block/abc');
+            .get('/block/block-hash');
 
-        expect(response.status).toEqual(200);
-        expect(response.body.hash).toEqual('abc');
+            expect(response.status).toEqual(200);
+        expect(response.body.hash).toEqual('block-hash');
     });
 
     test('GET /block/next - Should get next block info', async () => {
@@ -62,7 +64,7 @@ describe('Blockchain Server tests', () => {
     test('POST /block/ - Should create a new block', async () => {
         const block = new Block({
             index: 1,
-            previousHash: 'abc'
+            previousHash: 'block-hash'
         } as Block);
 
         const response = await request(app)
@@ -76,7 +78,7 @@ describe('Blockchain Server tests', () => {
     test('POST /block/ - Should NOT create a new block - 400 - Bad Request', async () => {
         const block = new Block({
             index: -1,
-            previousHash: 'abc'
+            previousHash: 'block-hash'
         } as Block);
 
         const response = await request(app)
@@ -105,7 +107,7 @@ describe('Blockchain Server tests', () => {
 
     test('GET /transactions/ - Should get transactions(blocks)', async () => {
         const response = await request(app)
-            .get('/transactions/blocks');
+            .get('/transactions/block-hash');
 
         expect(response.status).toEqual(200);
         expect(response.body.blockIndex).toBeGreaterThan(-1);
@@ -121,7 +123,7 @@ describe('Blockchain Server tests', () => {
 
     test('GET /transactions/ - Should NOT get transactions', async () => {
         const response = await request(app)
-            .get('/transactions/xpto');
+            .get('/transactions/-1');
 
         expect(response.status).toEqual(200);
         expect(response.body.mempoolIndex).toEqual(-1);
@@ -130,8 +132,8 @@ describe('Blockchain Server tests', () => {
 
     test('POST /transactions/ - Should create a new transaction', async () => {
         const transaction = new Transaction({
-            txInput: new TransactionInput(),
-            to: "wallet"
+            txInputs : [new TransactionInput()],
+            txOutputs: [new TransactionOutput()],
         } as Transaction);
 
         const response = await request(app)
@@ -139,13 +141,13 @@ describe('Blockchain Server tests', () => {
             .send(transaction);
 
         expect(response.status).toEqual(201);
-        expect(response.body.txInput).toEqual(transaction.txInput);
+        expect(response.body.txInputs).toEqual(transaction.txInputs);
     });
 
     test('POST /transactions/ - Should NOT create a new transaction(undefined)', async () => {
 
         const transaction = new Transaction();
-        transaction.txInput == undefined;
+        transaction.txInputs == undefined;
 
         const response = await request(app)
             .post('/transactions/')
@@ -157,7 +159,8 @@ describe('Blockchain Server tests', () => {
     test('POST /transactions/ - Should NOT create a new transaction(invalid data)', async () => {
         var transaction = new Transaction({
             hash: "",
-            txInput: new TransactionInput()
+            timestamp: -1,
+            txInputs : [new TransactionInput()]
         } as Transaction);
 
         const response = await request(app)

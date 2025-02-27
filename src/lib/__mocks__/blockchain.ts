@@ -18,7 +18,7 @@ export default class Blockchain {
 
         this.blocks.push(new Block({
             index: 0,
-            hash: '#hash#',
+            hash: 'block-hash',
             previousHash: '',
             miner,
             timestamp: Date.now()
@@ -74,13 +74,14 @@ export default class Blockchain {
 
         return {
             mempoolIndex: 0,
+            blockIndex: 0,
             transaction: new Transaction()
         } as TransactionSearch
     }
 
     addTransaction(transaction: Transaction) : Validation {
         
-        if(!transaction.txInputs) return new Validation(false, 'Invalid data');
+        if(transaction.timestamp < 0) return new Validation(false, 'Invalid data');
         
         this.mempool.push(transaction);
         

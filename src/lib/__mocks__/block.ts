@@ -24,7 +24,7 @@ export default class Block {
     }
 
     getHash(): string {
-        return this.hash || '#hash#';
+        return this.hash || 'block-hash';
     }
 
     isValid(previousHash: string, previousIndex: number) : Validation {
