@@ -100,7 +100,7 @@ function recoverWallet() {
     
 }
 
-function getBalance() {
+async function getBalance() {
     console.clear();
     console.log();
 
@@ -108,8 +108,9 @@ function getBalance() {
         console.log(`You don't have a wallet yet.`);
         return preMenu();
     }
-        
-
+    
+    const {data} = await axios.get(`${BLOCKCHAIN_SERVER}/wallets/${myPublicWallet}`)
+    console.log(`Balance: ${data.balance}`);
     preMenu();
 }
 
@@ -148,24 +149,36 @@ function sendTransaction() {
                 return preMenu();
             }
 
-            const tx = new Transaction();
-            tx.txOutputs = [
-                new TransactionOutput({
-                    toAddress: to,
-                    amount
-                } as TransactionOutput)
-            ];
-            tx.type = TransactionType.REGULAR;
-            tx.timestamp = Date.now();
-            tx.txInputs = [new TransactionInput({
-                amount,
-                fromAddress: myPublicWallet,
-                previousTx: utxo[0].tx
-            } as TransactionInput)];
+            const txInputs = utxo.map(txo => TransactionInput.fromTxo(txo));
+            txInputs.forEach((txi, index, arr) => arr[index].sign(myPrivateWallet))
 
-            tx.txInputs[0].sign(myPrivateWallet);
+            //transação
+            const txOutputs = [] as TransactionOutput[];
+            txOutputs.push(new TransactionOutput({
+                toAddress: to,
+                amount
+            } as TransactionOutput))
+
+            const remainingBalance = balance - amount - fee;
+            
+            //troco
+            txOutputs.push(new TransactionOutput({
+                toAddress: myPublicWallet,
+                amount: remainingBalance
+            } as TransactionOutput));
+
+            const tx = new Transaction({
+                txInputs,
+                txOutputs
+            } as Transaction);
+
             tx.hash = tx.getHash();
-            tx.txOutputs[0].tx = tx.hash;
+            tx.txOutputs.forEach((txo, index, arr) => arr[index].tx = tx.hash);
+
+            console.log(tx);
+            console.log(`Remaining balance: ${remainingBalance}`);
+
+            //TODO: Adicionar uma ultima confirmação antes de enviar a transação
 
             try {
                 const response = await axios.post(`${BLOCKCHAIN_SERVER}/transactions/`, tx);

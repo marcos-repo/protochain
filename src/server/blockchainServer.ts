@@ -106,14 +106,14 @@ app.post('/transactions', (req, res, next) => {
 app.get('/wallets/:wallet', (req, res, next) => {
     const wallet = req.params.wallet;
 
+    const utxo = blockchain.getUtxo(wallet);
+    const balance = blockchain.getBalance(wallet);
+    const fee = blockchain.getFeePerTx();
+
     res.json({
-        balance: 10,
-        fee: blockchain.getFeePerTx(),
-        utxo: [new TransactionOutput({
-            amount: 10,
-            toAddress: wallet,
-            tx: 'tx'
-        } as TransactionOutput)]
+        balance: balance,
+        fee: fee,
+        utxo: utxo
     });
 })
 
