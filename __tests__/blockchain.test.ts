@@ -9,6 +9,7 @@ import TransactionOutput from '../src/lib/transactionOutput';
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/transaction');
 jest.mock('../src/lib/transactionInput');
+jest.mock('../src/lib/transactionOutput');
 
 describe('Blockchain Tests', () =>{
     
@@ -83,8 +84,36 @@ describe('Blockchain Tests', () =>{
 
     test('Should NOT add block', () => {
         const blockchain = new Blockchain(alice.publicKey);
+        
+        const tx = new Transaction({
+            txInputs : [new TransactionInput()]
+        } as Transaction);
+
+        blockchain.mempool.push(tx);
+
         const result = blockchain.addBlock(new Block({
             index: -1,
+            previousHash: blockchain.getLastBlock().hash,
+            transactions: [new Transaction({
+                txInputs : [new TransactionInput()]
+            } as Transaction)],
+        } as Block));
+
+        expect(result.success).toEqual(false);
+    });
+
+    test('Should NOT add block(Invalid transaction in Block -> mempool)', () => {
+        const blockchain = new Blockchain(alice.publicKey);
+        
+        const tx = new Transaction({
+            timestamp: -1,
+            hash: "error-hash",
+            txInputs : [new TransactionInput()]
+        } as Transaction);
+
+        blockchain.mempool.push(tx);
+
+        const result = blockchain.addBlock(new Block({
             previousHash: blockchain.getLastBlock().hash,
             transactions: [new Transaction({
                 txInputs : [new TransactionInput()]
@@ -146,7 +175,7 @@ describe('Blockchain Tests', () =>{
         const blockchain = new Blockchain(alice.publicKey);
 
         const tx = new Transaction({
-       
+            timestamp: -1
         } as Transaction);
 
         const validation = blockchain.addTransaction(tx);

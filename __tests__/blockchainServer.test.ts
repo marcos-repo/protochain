@@ -169,4 +169,12 @@ describe('Blockchain Server tests', () => {
 
         expect(response.status).toEqual(400);
     });
+
+    test('GET /wallet/ - Should get wallet', async () => {
+        const response = await request(app)
+            .get('/wallets/toaddress');
+
+        expect(response.status).toEqual(200);
+        expect(response.body.balance).toEqual(10);
+    });
 })

@@ -326,6 +326,7 @@ describe('Block Tests', () =>{
         } as Block);
 
         block.transactions.push(new Transaction({
+            timestamp: -1,
             type: TransactionType.FEE,
             txOutputs: [new TransactionOutput({
                 toAddress: MINER
@@ -333,10 +334,11 @@ describe('Block Tests', () =>{
         } as Transaction));
         
         block.hash = block.getHash();
+        block.miner = MINER;
+        block.mine(DIFFICULTY, MINER);
 
         const result = block.isValid(genesis.hash, genesis.index, DIFFICULTY);
         
-
         expect(result.success).toBeFalsy();
     });
 
