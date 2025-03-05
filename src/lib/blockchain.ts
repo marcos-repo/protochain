@@ -27,18 +27,13 @@ export default class Blockchain {
     }
 
     createGenesisBlock(miner: string): Block {
-        const amount = 10;//TODO: calcular a recompensa
+        const amount = Blockchain.getRewardAmount(this.getDifficulty());
 
-        const tx = new Transaction({
-            type: TransactionType.FEE,
-            txOutputs: [
-                new TransactionOutput({
-                    amount,
-                    toAddress: miner
-                } as TransactionOutput)
-            ]
-        } as Transaction);
-
+        const tx = Transaction.fromReward(new TransactionOutput({
+            amount,
+            toAddress: miner
+        } as TransactionOutput));
+        
         tx.hash = tx.getHash();
         tx.txOutputs[0].tx = tx.hash;
 
@@ -100,7 +95,7 @@ export default class Blockchain {
             }
         }
 
-        const validation = transaction.isValid();
+        const validation = transaction.isValid(this.getDifficulty(), this.getFeePerTx());
         if(!validation.success) return new Validation(false, `Invalid TX -> ${validation.message}`);
 
         if(this.blocks.some(b => b.transactions.some(tx => tx.hash === transaction.hash)))
@@ -116,7 +111,12 @@ export default class Blockchain {
         if(!nextBlock)
             return new Validation(false, 'There is no next block info.')
 
-        const result = block.isValid(nextBlock.previousHash, nextBlock.index -1, nextBlock.difficulty);
+        const result = block.isValid(
+            nextBlock.previousHash, 
+            nextBlock.index -1, 
+            nextBlock.difficulty,
+            nextBlock.feePerTx
+        );
         if(!result.success) return new Validation(false, `Invalid Block -> ${result.message}`);
         
         const txs = block.transactions.filter(tx => tx.type !== TransactionType.FEE).map(tx => tx.hash);
@@ -141,7 +141,13 @@ export default class Blockchain {
         for(let i = this.blocks.length -1; i > 0; i--) {
             const currentBlock = this.blocks[i];
             const previousBlock = this.blocks[i-1];
-            const result = currentBlock.isValid(previousBlock.hash, previousBlock.index, this.getDifficulty());
+            const result = currentBlock.isValid(
+                                            previousBlock.hash, 
+                                            previousBlock.index, 
+                                            this.getDifficulty(), 
+                                            this.getFeePerTx()
+                                        );
+
             if(!result.success) return new Validation(false, `Invalid Block #${currentBlock.index}: ${result.message}`);
         }
 
@@ -220,5 +226,9 @@ export default class Blockchain {
             return 0;
 
         return utxo.reduce((a,b) => a + b!.amount, 0);
+    }
+
+    static getRewardAmount(difficulty: number): number {
+        return (64 - difficulty) * 10;
     }
 }

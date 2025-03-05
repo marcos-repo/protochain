@@ -45,7 +45,7 @@ export default class Block {
         } while(!this.hash.startsWith(prefix));
     }
 
-    isValid(previousHash: string, previousIndex: number, difficulty: number) : Validation {
+    isValid(previousHash: string, previousIndex: number, difficulty: number, feePerTx: number) : Validation {
 
         if(this.transactions && this.transactions.length) {
             
@@ -59,8 +59,11 @@ export default class Block {
             if(!feeTxs[0].txOutputs.some(txo => txo.toAddress === this.miner))
                 return new Validation(false, 'Invalid fee transaction: Different from miner');
 
-            const validations = this.transactions.map(t => t.isValid());
+            const transactionCount = this.transactions.filter(tx => tx.type !== TransactionType.FEE).length;
+            const totalFees = feePerTx * transactionCount;
+            const validations = this.transactions.map(t => t.isValid(difficulty, totalFees));
             const errors = validations.filter(v => !v.success).map(v => v.message);
+            
             if(errors.length > 0)
                 return new Validation(false, 'Invalid block. Contains invalid transactions.' + errors.reduce((a,b) => a.concat(b)));
         }

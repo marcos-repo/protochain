@@ -81,11 +81,12 @@ export default class Blockchain {
 
     addTransaction(transaction: Transaction) : Validation {
         
-        if(transaction.timestamp < 0) return new Validation(false, 'Invalid data');
-        
-        this.mempool.push(transaction);
-        
-        return new Validation(true, transaction.hash);
+        const result = transaction.isValid(1, 10);
+        if(!result.success)
+            return result;
+
+        this.mempool.push(transaction);        
+        return new Validation();
     }
 
     getTxInputs(wallet: string) : (TransactionInput | undefined)[] {
