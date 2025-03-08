@@ -1,6 +1,9 @@
 import { describe, test, expect, beforeAll, jest } from '@jest/globals';
 import TransactionInput from '../src/lib/transactionInput';
 import Wallet from '../src/lib/wallet';
+import TransactionOutput from '../src/lib/transactionOutput';
+
+jest.mock('../src/lib/transactionOutput');
 
 describe('Transaction Input Tests', () => {
 
@@ -24,6 +27,21 @@ describe('Transaction Input Tests', () => {
         const result = txInput.isValid();
         expect(result.success).toBeTruthy();
 
+    });
+
+    test('Should be valid(from txo)', () => {
+        
+        const txo = new TransactionOutput({
+                    amount: 10,
+                    toAddress: alice.publicKey
+                } as TransactionOutput);
+        
+        const txInput = TransactionInput.fromTxo(txo);
+
+        txInput.sign(alice.privateKey);
+
+        const result = txInput.isValid();
+        expect(result.success).toBeTruthy();
     });
 
     test('Should NOT be valid(defaults)', () => {

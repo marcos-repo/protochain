@@ -57,6 +57,14 @@ export default class Transaction {
                 return new Validation(false, `Invalid transaction inputs ${message} `);
             }
 
+            if(this.type === TransactionType.FEE) {
+                const txo = this.txOutputs[0];
+                const totalReward = Blockchain.getRewardAmount(difficulty) + totalFees;
+
+                if(txo.amount > totalReward) {
+                    return new Validation(false, 'Invalid tx reward');
+                }
+            }
             const inputSum = this.txInputs.map(txi => txi.amount)
                                           .reduce((a,b) => a + b, 0);
 
@@ -69,13 +77,7 @@ export default class Transaction {
             if(this.txOutputs.some(txo => txo.tx !== this.hash))
                 return new Validation(false, 'Invalid TXO reference hash');
 
-            if(this.type === TransactionType.FEE) {
-                const txo = this.txOutputs[0];
-                const totalReward = Blockchain.getRewardAmount(difficulty) + totalFees;
-                if(txo.amount > totalReward) {
-                    return new Validation(false, 'Invalid tx reward');
-                }
-            }
+            
         }
 
         return new Validation();

@@ -82,14 +82,14 @@ export default class Blockchain {
                             .flat()
                             .filter(txi => txi!.fromAddress === from);
 
-            if(pendingTx && pendingTx.length > 0) {
-                return new Validation(false, 'This wallet has a pending transaction ');
+                            if(pendingTx && pendingTx.length > 0) {
+                return new Validation(false, 'This wallet has a pending transaction');
             }
 
             const utxo = this.getUtxo(from);
             for (let i = 0; i < transaction.txInputs.length; i++) {
                 const txi = transaction.txInputs[i];
-                if(utxo.findIndex(txo => txo?.tx === txi.previousTx && txo?.amount >= txi.amount) === -1)
+                if(utxo && utxo.findIndex(txo => txo!.tx === txi.previousTx && txo!.amount >= txi.amount) === -1)
                     return new Validation(false, 'Invalid transaction: the TXO is already spent or unexistent.');
                 
             }
@@ -193,16 +193,13 @@ export default class Blockchain {
 
     getTxOutputs(wallet: string): (TransactionOutput | undefined)[] {
         
-        const x = this.blocks
+        return this.blocks
                 .map(tx => tx.transactions)
                 .flat()
                 .filter(tx => tx.txOutputs && tx.txOutputs.length)
                 .map(tx => tx.txOutputs)
                 .flat()
                 .filter(txi => txi!.toAddress == wallet) as TransactionOutput[];
-
-                console.log(x);
-                return x;
     }
 
     getUtxo(wallet: string) : (TransactionOutput | undefined)[] {
@@ -213,7 +210,7 @@ export default class Blockchain {
             return txOuts;
 
         txIns.forEach(txi => {
-            const index = txOuts.findIndex(txo => txo?.amount === txi!.amount);
+            const index = txOuts.findIndex(txo => txo!.amount === txi!.amount);
             txOuts.splice(index, 1);
         });
 

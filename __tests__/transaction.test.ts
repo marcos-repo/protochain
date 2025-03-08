@@ -9,6 +9,9 @@ jest.mock('../src/lib/transactionOutput');
 
 describe('Transaction Tests', () => {
     
+    const DIFFICULTY = 1;
+    const TOTAL_FEES = 1;
+
     test('Should be valid (REGULAR)', () => {
         
         const tx = new Transaction({
@@ -16,7 +19,7 @@ describe('Transaction Tests', () => {
                 txOutputs: [new TransactionOutput()]
             } as Transaction);
 
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
 
         expect(result.success).toBeTruthy();
     });
@@ -24,7 +27,7 @@ describe('Transaction Tests', () => {
     test('Should NOT be valid (REGULAR empty)', () => {
         const tx = new Transaction();
 
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
 
         expect(result.success).toBeFalsy();
     });
@@ -37,7 +40,7 @@ describe('Transaction Tests', () => {
                 timestamp: Date.now()
             } as Transaction);
 
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
         expect(result.success).toBeTruthy();
     });
 
@@ -48,7 +51,7 @@ describe('Transaction Tests', () => {
                 txOutputs: [new TransactionOutput()],
             } as Transaction);
 
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
 
         expect(result.success).toBeTruthy();
     });
@@ -59,7 +62,7 @@ describe('Transaction Tests', () => {
             } as Transaction);
         
         tx.hash = "abc";
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
 
         expect(result.success).toBeFalsy();
     });
@@ -76,7 +79,7 @@ describe('Transaction Tests', () => {
         
         tx.txInputs![0].amount = -10;
         
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
         expect(result.success).toBeFalsy();
     });
 
@@ -94,7 +97,7 @@ describe('Transaction Tests', () => {
                 } as TransactionOutput)],
             } as Transaction);
         
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
         expect(result.success).toBeFalsy();
     });
 
@@ -115,7 +118,60 @@ describe('Transaction Tests', () => {
         tx.hash = tx.getHash();
         tx.txOutputs[0].tx = 'hash';
 
-        const result = tx.isValid();
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
         expect(result.success).toBeFalsy();
     });
+
+    test('Should NOT be valid (Invalid tx reward)', () => {
+        
+        const tx = new Transaction({
+                type: TransactionType.FEE,
+                txInputs : [new TransactionInput({
+                    amount: 10
+                } as TransactionInput)],
+                txOutputs: [new TransactionOutput({
+                    amount: 632,
+                } as TransactionOutput)],
+            } as Transaction);
+
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
+        expect(result.success).toBeFalsy();
+    });
+
+    test('Should get FEE', () => {
+
+        const tx = new Transaction({
+            txInputs : [new TransactionInput({
+                amount: 15
+            } as TransactionInput)],
+            txOutputs: [new TransactionOutput({
+                amount: 10
+            } as TransactionOutput)],
+        } as Transaction);
+
+        const fee = tx.getFee();
+
+        expect(fee).toEqual(5);
+    });
+
+    test('Should get FEE(zero)', () => {
+
+        const tx = new Transaction({
+            txInputs : undefined,
+            txOutputs: [] as TransactionOutput[]
+        } as Transaction);
+
+        const fee = tx.getFee();
+        expect(fee).toEqual(0);
+    });
+
+    test('Should get from reward valid', () => {
+
+        const tx = Transaction.fromReward(new TransactionOutput());
+        const result = tx.isValid(DIFFICULTY, TOTAL_FEES);
+
+        expect(result.success).toBeTruthy();
+    });
+
+    
 })
